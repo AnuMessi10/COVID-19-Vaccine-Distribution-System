@@ -1,0 +1,207 @@
+from tkinter import *
+from PIL import ImageTk  # pip install pillow
+from tkinter import messagebox
+import pymysql
+import random
+import string
+from tkinter import Tk, Label, Entry, Button, END
+from PIL import ImageTk, Image
+from captcha.image import ImageCaptcha
+import os
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+
+image_captcha = ''
+
+
+
+class login:
+    user1=''
+    pass1=''
+    def __init__(self, root):
+
+        self.root = root
+        self.root.title("Login System")
+        self.root.geometry("995x702+100+50")  # dimension of main frame
+        self.root.resizable(False, False)  # user cannot expand image
+
+        # ***************** Image frame ************************#
+        self.bg = ImageTk.PhotoImage(file="images/Login.jpg")
+        self.bg_image = Label(self.root, image=self.bg).place(x=1, y=1, relwidth=1,
+                                                              relheight=1)  # insert image into frame
+
+        # ****************  Login Frame ********************
+        Frame_login = Frame(self.root, bg='light blue')
+        Frame_login.place(x=400, y=150, height=400, width=500)
+
+        # Give title into frame
+        title = Label(Frame_login, text="Login Here", font=("Cambia", 30, "bold"), fg='#002147', bg='light blue').place(
+            x=140, y=30)
+
+        # username
+        user_name = Label(Frame_login, text='Username', font=("Georgia", 15, 'bold'), fg='#0067A5',
+                          bg='light blue').place(x=70, y=90)
+        self.txt_user = Entry(Frame_login, font=('times new roman', 15))
+        self.txt_user.place(x=70, y=120, width=350, height=30)
+
+
+        # password
+        password = Label(Frame_login, text='Password', font=("Georgia", 15, 'bold'), fg='#0067A5',
+                         bg='light blue').place(x=70, y=150)
+        self.txt_pass = Entry(Frame_login, font=('times new roman', 15))
+        self.txt_pass.place(x=70, y=180, width=350, height=30)
+
+        #captcha image
+        img = PhotoImage(file='c1.png')
+        Label(Frame_login,image=img).place(x=60,y=230)
+        Label(Frame_login, text='Enter Captcha', font=("Georgia", 15, 'bold'), fg='black',bg='light blue').place(x=250, y=220)
+
+        #Refresh button
+        path = 'images/refresh.jpg'
+        reload_img = ImageTk.PhotoImage(Image.open(path).resize((20, 20), Image.ANTIALIAS))
+        reload_button = Button(Frame_login,image=reload_img, fg='#0067A5',bg='light blue',command=self.generate_image_captcha)
+        reload_button.place(x=60,y=290)
+        #Button(Frame_login,text='Refresh',font=("Georgia", 15, 'bold'), fg='#0067A5',
+                         #bg='light blue').place(x=100,y=270)
+        # Entry
+        self.entry = Entry(Frame_login, width=15, borderwidth=5,
+                      font="Arial 15", justify="center")
+        self.entry.grid(row=2, column=0)
+        self.entry.place(x=250, y=250)
+
+        # submit button
+        submit = Button(Frame_login, command=self.login_function, text='Login', font=("Georgia", 15, 'bold'),
+                        fg='#0067A5',
+                        bg='light blue').place(x=130, y=330, width=180, height=40)
+        self.generate_image_captcha()
+        mainloop()
+
+    def generate_image_captcha(self):
+        a = str(random.randint(0, 9))
+        data_set = list(string.ascii_letters + string.digits + a)  # a-z,A-Z,0-9
+        s = ''
+        for i in range(0,6):
+            a = random.choice(data_set)
+            s = s + a
+            data_set.remove(a)
+
+        global image_captcha
+        image_captcha = s
+        img = ImageCaptcha()
+        value = img.generate(s)
+        img.write(s, "c1.png")
+        self.imgage = mpimg.imread("c1.png")
+        print(self.imgage)
+        #return image_captcha
+
+    def check(x, y):
+        if x.lower() == y.lower():
+            verify_label = Label(master=root,
+                                 text="Verified",
+                                 font="Arial 15",
+                                 bg='#ffe75c',
+                                 fg="#00a806"
+                                 )
+            verify_label.grid(row=0, column=0, columnspan=2, pady=10)
+        else:
+            verify_label = Label(master=root,
+                                 text="Incorrect!",
+                                 font="Arial 15",
+                                 bg='#ffe75c',
+                                 fg="#fa0800"
+                                 )
+            verify_label.grid(row=0, column=0, columnspan=2, pady=10)
+    def login_function(self):
+        global y
+        y=self.txt_user.get()
+        #print(self.entry.get())
+        if self.txt_user.get() == '' or self.txt_pass.get() == '' or self.entry.get() == '':
+            messagebox.showerror("Error", "All fields are mandatory to fill", parent=self.root)
+        elif self.entry.get() != self.imgage:
+            messagebox.showerror("Error", "Invalid Captcha", parent=self.root)
+        else:
+            try:
+                con = pymysql.connect(user='root', password='', host='localhost', database='registration')
+                cur = con.cursor()
+                cur.execute("Select * from details where Login=%s and password = %s",(self.txt_user.get(),self.txt_pass.get()))
+                row=cur.fetchone()
+                print(row)
+                if row == None:
+                    messagebox.showinfo("Error", 'Invalid Username or password', parent=self.root)
+                else:
+                    messagebox.showinfo("Welcome", 'Login Successfully', parent=self.root)
+                    con.close()
+                    self.root.destroy()
+                    #import UserGUI
+            except Exception as e:
+                messagebox.showerror("Error", f"Error due to:{str(e)}", parent=self.root)
+        login.user1=y
+        #print(y)
+
+
+
+
+root = Tk()
+obj = login(root)
+root.mainloop()
+
+# To generate image for captcha
+
+'''
+from captcha.image import ImageCaptcha
+image = ImageCaptcha(width=280, height=90)
+data = image.generate('Anurag')
+image.write('Anurag', 'demo1.png')
+
+# To generate random Captcha
+
+
+import random
+
+
+# Returns true if given two strings are same
+def checkCaptcha(captcha, user_captcha):
+    if captcha == user_captcha:
+        return True
+    return False
+
+
+# Generates a CAPTCHA of given length
+def generateCaptcha(n):
+    # Characters to be included
+    chrs = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+    # Generate n characters from above set and
+    # add these characters to captcha.
+    captcha = ""
+    while (n):
+        captcha += chrs[random.randint(1, 1000) % 62]
+        n -= 1
+    return captcha
+
+
+# Driver code
+while(True):
+    # Generate a random CAPTCHA          
+    captcha = generateCaptcha(6)                                     
+    print(captcha)
+
+    # Ask user to enter a CAPTCHA
+    print("Enter above CAPTCHA:")
+    usr_captcha = input()
+
+    # Notify user about matching status
+    if (checkCaptcha(captcha, usr_captcha)):
+        print("CAPTCHA Matched")
+        break
+    else:
+        print("CAPTCHA Not Matched")'''
+
+'''
+# SQL connection
+import mysql.connector
+con=mysql.connector.connect(user='root',password='',host='localhost',database='user_details')
+cursor=con.cursor()
+query=cursor.execute("SELECT * FROM log_pass where Login= %s and password = %s ")
+r=cursor.fetchall()
+print(r)'''
