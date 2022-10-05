@@ -239,12 +239,11 @@ class Apt:
                 cur1 = con1.cursor()
 
                 cur1.execute(
-                    "UPDATE appointment SET username = %s, hospital = %s, date_vac = STR_TO_DATE(%s, %s), dose = %s, vaccine = %s WHERE "
+                    "UPDATE appointment SET username = %s, date_vac = STR_TO_DATE(%s, %s),  vaccine = %s, dose = %s, hospital = %s, WHERE "
                     "username = %s",
                     (
-                        self.user_box.get(), self.hosp_box.get(), self.date_box.get(), '%d/%m/%Y',
-                        self.dosage_box.get(),
-                        self.vaccine_box.get(), old_user
+                        self.user_box.get(), self.date_box.get(),'%d/%m/%Y', self.vaccine_box.get(),
+                        self.dosage_box.get(), self.hosp_box.get(), old_user
                     ))
 
                 con1.commit()
